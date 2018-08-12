@@ -5,7 +5,7 @@ import {StaticMap} from 'react-map-gl';
 import DeckGL, {HexagonLayer} from 'deck.gl';
 
 const d3 = require('d3-request');
-const mapboxgl = require('mapbox-gl@~0.44.1/dist/mapbox-gl.js');
+// const mapboxgl = require('mapbox-gl@~0.44.1/dist/mapbox-gl.js');
 // Set your mapbox token here
 // const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
 const MAPBOX_TOKEN = 'pk.eyJ1IjoidG9ydHVjYSIsImEiOiJjamtxY2g2NGcwOGxjM3FqdGdtOGx4MHZyIn0.7fTP3ScvefhJ5f--aPTQZA';
