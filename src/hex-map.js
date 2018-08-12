@@ -13,15 +13,25 @@ const MAPBOX_TOKEN = 'pk.eyJ1IjoidG9ydHVjYSIsImEiOiJjamtxY2g2NGcwOGxjM3FqdGdtOGx
 // Source data CSV
 const DATA_URL =
   'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv'; // eslint-disable-line
+const TAXI_DATA_URL = 'https://api.data.gov.sg/v1/transport/taxi-availability';
 
+// export const INITIAL_VIEW_STATE = {
+//   longitude: -1.4157267858730052,
+//   latitude: 52.232395363869415,
+//   zoom: 6.6,
+//   minZoom: 5,
+//   maxZoom: 15,
+//   pitch: 40.5,
+//   bearing: -27.396674584323023
+// };
 export const INITIAL_VIEW_STATE = {
-  longitude: -1.4157267858730052,
-  latitude: 52.232395363869415,
-  zoom: 6.6,
-  minZoom: 5,
+  longitude: 103.8198,
+  latitude: 1.3521,
+  zoom: 11,
+  minZoom: 8,
   maxZoom: 15,
-  pitch: 40.5,
-  bearing: -27.396674584323023
+  pitch: 45,
+  // bearing: -27.396674584323023
 };
 
 const LIGHT_SETTINGS = {
@@ -53,7 +63,8 @@ class HexMap extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      elevationScale: elevationScale.min
+      elevationScale: elevationScale.min,
+      hoveredObject: null
     };
 
     this.startAnimationTimer = null;
@@ -61,6 +72,9 @@ class HexMap extends Component {
 
     this._startAnimate = this._startAnimate.bind(this);
     this._animateHeight = this._animateHeight.bind(this);
+
+    this._onHover = this._onHover.bind(this);
+    this._renderTooltip = this._renderTooltip.bind(this);
   }
 
   componentDidMount() {
@@ -101,40 +115,43 @@ class HexMap extends Component {
     }
   }
 
-  _renderLayers() {
-    const {data, radius = 1000, upperPercentile = 100, coverage = 1} = this.props;
+  _onHover({x, y, object}) {
+    this.setState({x, y, hoveredObject: object});
+  }
 
+  _renderTooltip() {
+    const {x, y, hoveredObject} = this.state;
+    return (
+      hoveredObject && (
+        <div className="tooltip" style={{top: y, left: x}}>
+          <div><b>Taxi Count</b></div>
+          <div>{hoveredObject.points.length}</div>
+        </div>
+      )
+    );
+  }
+
+  _renderLayers() {
+    const {data, radius = 200, upperPercentile = 98, coverage = 1} = this.props;
     return [
       new HexagonLayer({
         id: 'heatmap',
         colorRange,
         coverage,
         data,
-        elevationRange: [0, 3000],
-        elevationScale: this.state.elevationScale,
+        elevationRange: [0, 500],
+        elevationScale: 50,
+        // elevationScale: this.state.elevationScale,
         extruded: true,
         getPosition: d => d,
         lightSettings: LIGHT_SETTINGS,
-        onHover: this.props.onHover,
+        onHover: this._onHover,
         opacity: 1,
-        pickable: Boolean(this.props.onHover),
+        pickable: true,
         radius,
         upperPercentile
       })
     ];
-  }
-
-  getTaxiFullData() {
-    return d3.json('https://api.data.gov.sg/v1/transport/taxi-availability');
-  }
-
-  getTaxiData() {
-    const data = this.getTaxiFullData();
-    console.log(data);
-    return data.features[0].geometry.coordinates
-      .map(row => {
-        return {lng: row[0], lat: row[1]}
-      })
   }
 
   render() {
@@ -155,12 +172,13 @@ class HexMap extends Component {
             mapboxApiAccessToken={MAPBOX_TOKEN}
           />
         )}
+        {this._renderTooltip}
       </DeckGL>
     );
   }
 }
 
-function renderToDOM(container) {
+function renderToTest(container) {
   render(<HexMap />, container);
   d3.csv(DATA_URL, (error, response) => {
     if (!error) {
@@ -169,5 +187,24 @@ function renderToDOM(container) {
     }
   });
 }
+
+function getTaxiFullData() {
+  return d3.json(TAXI_DATA_URL);
+}
+
+function renderToDOM(container) {
+  render(<HexMap />, container);
+  d3.json(TAXI_DATA_URL, (error, response) => {
+    if (!error) {
+      // console.log(response);
+      const data = response.features[0].geometry.coordinates
+        .map(row => [Number(row[0]), Number(row[1])]
+        );
+      // console.log(data);
+      render(<HexMap data={data} />, container);
+    }
+  });
+}
+
 export default HexMap;
 export {renderToDOM};
