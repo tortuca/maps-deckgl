@@ -3,9 +3,10 @@ import React, {Component} from 'react';
 import {render} from 'react-dom';
 import {StaticMap} from 'react-map-gl';
 import DeckGL, {HexagonLayer} from 'deck.gl';
+import OptionsPanel from './layouts/options-panel';
 
 const d3 = require('d3-request');
-// const mapboxgl = require('mapbox-gl@~0.44.1/dist/mapbox-gl.js');
+
 // Set your mapbox token here
 // const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
 const MAPBOX_TOKEN = 'pk.eyJ1IjoidG9ydHVjYSIsImEiOiJjamtxY2g2NGcwOGxjM3FqdGdtOGx4MHZyIn0.7fTP3ScvefhJ5f--aPTQZA';
@@ -15,17 +16,8 @@ const DATA_URL =
   'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv'; // eslint-disable-line
 const TAXI_DATA_URL = 'https://api.data.gov.sg/v1/transport/taxi-availability';
 
-// export const INITIAL_VIEW_STATE = {
-//   longitude: -1.4157267858730052,
-//   latitude: 52.232395363869415,
-//   zoom: 6.6,
-//   minZoom: 5,
-//   maxZoom: 15,
-//   pitch: 40.5,
-//   bearing: -27.396674584323023
-// };
 export const INITIAL_VIEW_STATE = {
-  longitude: 103.8198,
+  longitude: 103.82,
   latitude: 1.3521,
   zoom: 11,
   minZoom: 8,
@@ -64,7 +56,10 @@ class HexMap extends Component {
     super(props);
     this.state = {
       elevationScale: elevationScale.min,
-      hoveredObject: null
+      hoveredObject: null,
+      upperPercent: 98,
+      radius: 200,
+      taxiCount: 4321
     };
 
     this.startAnimationTimer = null;
@@ -75,6 +70,8 @@ class HexMap extends Component {
 
     this._onHover = this._onHover.bind(this);
     this._renderTooltip = this._renderTooltip.bind(this);
+    this._handlePercent = this._handlePercent.bind(this);
+    this._handleRadius = this._handleRadius.bind(this);
   }
 
   componentDidMount() {
@@ -115,6 +112,14 @@ class HexMap extends Component {
     }
   }
 
+  _handlePercent(val) {
+    this.setState({upperPercent: val});
+  }
+
+  _handleRadius(val) {
+    this.setState({radius: val});
+  }
+
   _onHover({x, y, object}) {
     this.setState({x, y, hoveredObject: object});
   }
@@ -149,7 +154,7 @@ class HexMap extends Component {
         opacity: 1,
         pickable: true,
         radius,
-        upperPercentile
+        upperPercentile: this.state.upperPercent
       })
     ];
   }
@@ -158,22 +163,26 @@ class HexMap extends Component {
     const {viewState, controller = true, baseMap = true} = this.props;
 
     return (
-      <DeckGL
-        layers={this._renderLayers()}
-        initialViewState={INITIAL_VIEW_STATE}
-        viewState={viewState}
-        controller={controller}
-      >
-        {baseMap && (
-          <StaticMap
-            reuseMaps
-            mapStyle="mapbox://styles/mapbox/dark-v9"
-            preventStyleDiffing={true}
-            mapboxApiAccessToken={MAPBOX_TOKEN}
-          />
-        )}
-        {this._renderTooltip}
-      </DeckGL>
+      <div>
+        <DeckGL
+          layers={this._renderLayers()}
+          initialViewState={INITIAL_VIEW_STATE}
+          viewState={viewState}
+          controller={controller}
+        >
+          {baseMap && (
+            <StaticMap
+              reuseMaps
+              mapStyle="mapbox://styles/mapbox/dark-v9"
+              preventStyleDiffing={true}
+              mapboxApiAccessToken={MAPBOX_TOKEN}
+            />
+          )}
+          {this._renderTooltip}
+        </DeckGL>
+        <OptionsPanel taxiCount={this.props.taxiCount}
+                      onPercentChange={this._handlePercent}/>
+      </div>
     );
   }
 }
@@ -188,20 +197,18 @@ function renderToTest(container) {
   });
 }
 
-function getTaxiFullData() {
-  return d3.json(TAXI_DATA_URL);
-}
-
 function renderToDOM(container) {
   render(<HexMap />, container);
   d3.json(TAXI_DATA_URL, (error, response) => {
     if (!error) {
       // console.log(response);
-      const data = response.features[0].geometry.coordinates
-        .map(row => [Number(row[0]), Number(row[1])]
-        );
+      const ft = response.features[0];
+      const data = ft.geometry.coordinates.map(
+        row => [Number(row[0]), Number(row[1])]
+      );
       // console.log(data);
-      render(<HexMap data={data} />, container);
+      render(<HexMap data={data}
+                     taxiCount={ft.properties.taxi_count} />, container);
     }
   });
 }
