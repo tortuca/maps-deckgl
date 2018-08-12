@@ -45,7 +45,7 @@ const colorRange = [
 const elevationScale = {min: 1, max: 50};
 
 /* eslint-disable react/no-deprecated */
-class App extends Component {
+class HexMap extends Component {
   static get defaultColorRange() {
     return colorRange;
   }
@@ -124,6 +124,19 @@ class App extends Component {
     ];
   }
 
+  getTaxiFullData() {
+    return d3.json('https://api.data.gov.sg/v1/transport/taxi-availability');
+  }
+
+  getTaxiData() {
+    const data = this.getTaxiFullData();
+    console.log(data);
+    return data.features[0].geometry.coordinates
+      .map(row => {
+        return {lng: row[0], lat: row[1]}
+      })
+  }
+
   render() {
     const {viewState, controller = true, baseMap = true} = this.props;
 
@@ -147,15 +160,14 @@ class App extends Component {
   }
 }
 
-export function renderToDOM(container) {
-  render(<App />, container);
-
+function renderToDOM(container) {
+  render(<HexMap />, container);
   d3.csv(DATA_URL, (error, response) => {
-    console.log(response);
     if (!error) {
       const data = response.map(d => [Number(d.lng), Number(d.lat)]);
-      render(<App data={data} />, container);
+      render(<HexMap data={data} />, container);
     }
   });
 }
-export default App;
+export default HexMap;
+export {renderToDOM};
