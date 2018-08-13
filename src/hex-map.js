@@ -190,7 +190,8 @@ class HexMap extends Component {
 
 function renderToDOM(container) {
   render(<HexMap />, container);
-  d3.json(TAXI_WS_URL, (error, response) => {
+  const dataUrl = (TAXI_WS_URL != TAXI_DATA_URL) ? TAXI_WS_URL + '/api/get' : TAXI_DATA_URL;
+  d3.json(dataUrl, (error, response) => {
     if (!error) {
       // console.log(response);
       const ft = response.features[0];
