@@ -9,16 +9,19 @@ class OptionsPanel extends Component {
     };
 
     this._handleChangeRadius = this._handleChangeRadius.bind(this);
-    // this._handleChangePercent = this._handleChangePercent.bind(this);
+    this._handleChangePercent = this._handleChangePercent.bind(this);
   }
 
   _handleChangeRadius(event) {
-    this.setState({radius: event.target.value});
+    let radius = event.target.value;
+    this.setState({radius: radius});
+    this.props.onRadiusChange(radius);
   }
 
   _handleChangePercent(event) {
     // this.setState({upperPercent: event.target.value});
     let percent = event.target.value;
+    this.setState({upperPercent: percent});
     this.props.onPercentChange(percent);
   }
 
@@ -26,7 +29,8 @@ class OptionsPanel extends Component {
     return (
       <div className="options-panel top-right">
         <h3>Singapore Taxi Availability</h3>
-        <p>Locations of taxis in Singapore</p>
+        <p>Locations of taxis in Singapore using&nbsp;
+          <a href="https://deck.gl" target="_new">deck.gl</a></p>
         <p>Data source: <a href="https://data.gov.sg">DATA.GOV.SG</a></p>
 
         <div className="layout">
@@ -35,7 +39,7 @@ class OptionsPanel extends Component {
         </div>
         <div className="input">
           <label>Radius: {this.state.radius}</label>
-          <input name="radius" type="range" step="10" min="100" max="300"
+          <input name="radius" type="range" step="100" min="100" max="500"
                  value={this.state.radius}
                  onChange={this._handleChangeRadius}/>
         </div>

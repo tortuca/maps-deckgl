@@ -153,7 +153,7 @@ class HexMap extends Component {
         onHover: this._onHover,
         opacity: 1,
         pickable: true,
-        radius,
+        radius: this.state.radius,
         upperPercentile: this.state.upperPercent
       })
     ];
@@ -181,7 +181,8 @@ class HexMap extends Component {
           {this._renderTooltip}
         </DeckGL>
         <OptionsPanel taxiCount={this.props.taxiCount}
-                      onPercentChange={this._handlePercent}/>
+                      onPercentChange={this._handlePercent}
+                      onRadiusChange={this._handleRadius}/>
       </div>
     );
   }
