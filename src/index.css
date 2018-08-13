@@ -1,7 +1,10 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: Helvetica Neue,Helvetica,sans-serif!important;
+  font-size: 14px;
+  line-height: 1.833;
+  overflow-y: auto;
 }
 
 .tooltip {
@@ -28,10 +31,53 @@ body {
 
 .options-panel {
   position: relative;
-  width: 244px;
+  width: 234px;
   background: #fff;
   box-shadow: 0 0 4px rgba(0,0,0,.15);
   margin: 18px;
   padding: 8px 16px;
   outline: none;
+}
+
+.options-panel .input label {
+  display: inline-block;
+  width: 40%;
+  margin-right: 10%;
+  color: #5a666d;
+  margin-bottom: 4px;
+}
+
+.options-panel .input>* {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.options-panel h3 {
+  font-size: 1.2em;
+  font-weight: 500;
+  margin: 8px 0;
+}
+
+.stat {
+  text-transform: uppercase;
+  font-size: .833em;
+}
+
+.stat b {
+  display: block;
+  font-size: 1.5em;
+}
+
+.options-panel hr {
+  margin: 12px -24px;
+}
+
+hr {
+  border: none;
+  background: #ededed;
+  height: 1px;
+}
+
+a {
+  text-decoration: none;
 }
