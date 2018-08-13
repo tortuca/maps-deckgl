@@ -12,9 +12,8 @@ const d3 = require('d3-request');
 const MAPBOX_TOKEN = 'pk.eyJ1IjoidG9ydHVjYSIsImEiOiJjamtxY2g2NGcwOGxjM3FqdGdtOGx4MHZyIn0.7fTP3ScvefhJ5f--aPTQZA';
 
 // Source data CSV
-const DATA_URL =
-  'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv'; // eslint-disable-line
 const TAXI_DATA_URL = 'https://api.data.gov.sg/v1/transport/taxi-availability';
+const TAXI_WS_URL = process.env.TAXI_WS_URL || TAXI_DATA_URL;
 
 export const INITIAL_VIEW_STATE = {
   longitude: 103.82,
@@ -57,7 +56,7 @@ class HexMap extends Component {
     this.state = {
       elevationScale: elevationScale.min,
       hoveredObject: null,
-      upperPercent: 98,
+      upperPercent: 100,
       radius: 200,
       taxiCount: 4321
     };
@@ -137,15 +136,15 @@ class HexMap extends Component {
   }
 
   _renderLayers() {
-    const {data, radius = 200, upperPercentile = 98, coverage = 1} = this.props;
+    const {data, coverage = 0.9} = this.props;
     return [
       new HexagonLayer({
         id: 'heatmap',
         colorRange,
         coverage,
         data,
-        elevationRange: [0, 500],
-        elevationScale: 50,
+        elevationRange: [0, 400],
+        elevationScale: 40,
         // elevationScale: this.state.elevationScale,
         extruded: true,
         getPosition: d => d,
@@ -180,7 +179,8 @@ class HexMap extends Component {
           )}
           {this._renderTooltip}
         </DeckGL>
-        <OptionsPanel taxiCount={this.props.taxiCount}
+        <OptionsPanel timestamp={this.props.timestamp}
+                      taxiCount={this.props.taxiCount}
                       onPercentChange={this._handlePercent}
                       onRadiusChange={this._handleRadius}/>
       </div>
@@ -200,7 +200,7 @@ function renderToTest(container) {
 
 function renderToDOM(container) {
   render(<HexMap />, container);
-  d3.json(TAXI_DATA_URL, (error, response) => {
+  d3.json(TAXI_WS_URL, (error, response) => {
     if (!error) {
       // console.log(response);
       const ft = response.features[0];
@@ -209,6 +209,7 @@ function renderToDOM(container) {
       );
       // console.log(data);
       render(<HexMap data={data}
+                     timestamp={ft.properties.timestamp}
                      taxiCount={ft.properties.taxi_count} />, container);
     }
   });
