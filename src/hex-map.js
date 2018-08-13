@@ -188,16 +188,6 @@ class HexMap extends Component {
   }
 }
 
-function renderToTest(container) {
-  render(<HexMap />, container);
-  d3.csv(DATA_URL, (error, response) => {
-    if (!error) {
-      const data = response.map(d => [Number(d.lng), Number(d.lat)]);
-      render(<HexMap data={data} />, container);
-    }
-  });
-}
-
 function renderToDOM(container) {
   render(<HexMap />, container);
   d3.json(TAXI_WS_URL, (error, response) => {
