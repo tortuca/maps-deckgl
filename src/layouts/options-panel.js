@@ -5,11 +5,19 @@ class OptionsPanel extends Component {
     super(props);
     this.state = {
       radius: 200,
-      upperPercent: 100
+      upperPercent: 100,
+      hour: 0
     };
 
+    this._handleChangeHour = this._handleChangeHour.bind(this);
     this._handleChangeRadius = this._handleChangeRadius.bind(this);
     this._handleChangePercent = this._handleChangePercent.bind(this);
+  }
+
+  _handleChangeHour(event) {
+    let hour = event.target.value;
+    this.setState({hour: hour});
+    this.props.onHourChange(hour);
   }
 
   _handleChangeRadius(event) {
@@ -19,7 +27,6 @@ class OptionsPanel extends Component {
   }
 
   _handleChangePercent(event) {
-    // this.setState({upperPercent: event.target.value});
     let percent = event.target.value;
     this.setState({upperPercent: percent});
     this.props.onPercentChange(percent);
@@ -54,6 +61,12 @@ class OptionsPanel extends Component {
           <input name="upperPercentile" type="range" step="1" min="90" max="100"
                  value={this.state.upperPercent}
                  onChange={this._handleChangePercent}/>
+        </div>
+        <div className="input">
+          <label>Hour: {this.state.hour}</label>
+          <input name="hour" type="range" step="1" min="-24" max="0"
+                 value={this.state.hour}
+                 onChange={this._handleChangeHour}/>
         </div>
       </div>
     );

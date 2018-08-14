@@ -5,7 +5,7 @@ import {StaticMap} from 'react-map-gl';
 import DeckGL, {HexagonLayer} from 'deck.gl';
 import OptionsPanel from './layouts/options-panel';
 
-const d3 = require('d3-request');
+const axios = require('axios');
 
 // Set your mapbox token here
 // const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
@@ -14,6 +14,7 @@ const MAPBOX_TOKEN = 'pk.eyJ1IjoidG9ydHVjYSIsImEiOiJjamtxY2g2NGcwOGxjM3FqdGdtOGx
 // Source data CSV
 const TAXI_DATA_URL = 'https://api.data.gov.sg/v1/transport/taxi-availability';
 const TAXI_WS_URL = process.env.TAXI_WS_URL || TAXI_DATA_URL;
+const TAXI_WS_LIMIT = 24;
 
 export const INITIAL_VIEW_STATE = {
   longitude: 103.82,
@@ -58,7 +59,9 @@ class HexMap extends Component {
       hoveredObject: null,
       upperPercent: 100,
       radius: 200,
-      taxiCount: 4321
+      taxiCount: 4321,
+      hour: 0,
+      dataset: null
     };
 
     this.startAnimationTimer = null;
@@ -67,14 +70,18 @@ class HexMap extends Component {
     this._startAnimate = this._startAnimate.bind(this);
     this._animateHeight = this._animateHeight.bind(this);
 
+    this._getData = this._getData.bind(this);
+    this._getDataList = this._getDataList.bind(this);
     this._onHover = this._onHover.bind(this);
     this._renderTooltip = this._renderTooltip.bind(this);
+    this._handleHour = this._handleHour.bind(this);
     this._handlePercent = this._handlePercent.bind(this);
     this._handleRadius = this._handleRadius.bind(this);
   }
 
   componentDidMount() {
     this._animate();
+    this._getDataList();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -85,6 +92,24 @@ class HexMap extends Component {
 
   componentWillUnmount() {
     this._stopAnimate();
+  }
+
+  _getDataList() {
+    const dataUrl = (TAXI_WS_URL !== TAXI_DATA_URL)
+      ? TAXI_WS_URL + '/api/list?limit=' + TAXI_WS_LIMIT : TAXI_DATA_URL;
+    axios.get(dataUrl)
+      .then(response => {
+        const data = response.data;
+        this.setState({ dataset: data });
+      }).catch(error => {
+        console.log(error);
+    });
+  }
+
+  _getData() {
+    const dataUrl = (TAXI_WS_URL !== TAXI_DATA_URL) ? TAXI_WS_URL + '/api/get' : TAXI_DATA_URL;
+    axios.get(dataUrl)
+      .then(response => this.setState({dataset: response.data}));
   }
 
   _animate() {
@@ -108,6 +133,15 @@ class HexMap extends Component {
       this._stopAnimate();
     } else {
       this.setState({elevationScale: this.state.elevationScale + 1});
+    }
+  }
+
+  _handleHour(val) {
+    this.setState({hour: Number(val)});
+    const ds = this.state.dataset;
+    const data = ds[Math.abs(val)];
+    if (typeof(data) !== 'undefined') {
+      renderData(document.getElementById('container'), JSON.parse(data));
     }
   }
 
@@ -175,12 +209,14 @@ class HexMap extends Component {
               mapStyle="mapbox://styles/mapbox/dark-v9"
               preventStyleDiffing={true}
               mapboxApiAccessToken={MAPBOX_TOKEN}
+              attributionControl={true}
             />
           )}
           {this._renderTooltip}
         </DeckGL>
         <OptionsPanel timestamp={this.props.timestamp}
                       taxiCount={this.props.taxiCount}
+                      onHourChange={this._handleHour}
                       onPercentChange={this._handlePercent}
                       onRadiusChange={this._handleRadius}/>
       </div>
@@ -188,21 +224,24 @@ class HexMap extends Component {
   }
 }
 
+function renderData(container, dataset) {
+  const ft = dataset.features[0];
+  const data = ft.geometry.coordinates.map(
+    row => [Number(row[0]), Number(row[1])]
+  );
+  render(<HexMap data={data}
+                 timestamp={ft.properties.timestamp}
+                 taxiCount={ft.properties.taxi_count} />, container);
+}
+
 function renderToDOM(container) {
   render(<HexMap />, container);
-  const dataUrl = (TAXI_WS_URL != TAXI_DATA_URL) ? TAXI_WS_URL + '/api/get' : TAXI_DATA_URL;
-  d3.json(dataUrl, (error, response) => {
-    if (!error) {
-      // console.log(response);
-      const ft = response.features[0];
-      const data = ft.geometry.coordinates.map(
-        row => [Number(row[0]), Number(row[1])]
-      );
-      // console.log(data);
-      render(<HexMap data={data}
-                     timestamp={ft.properties.timestamp}
-                     taxiCount={ft.properties.taxi_count} />, container);
-    }
+  const dataUrl = (TAXI_WS_URL !== TAXI_DATA_URL) ? TAXI_WS_URL + '/api/get' : TAXI_DATA_URL;
+  axios.get(dataUrl)
+    .then(response => {
+      renderData(container, response.data);
+    }).catch(error => {
+    console.log(error);
   });
 }
 
