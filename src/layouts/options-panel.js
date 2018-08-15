@@ -57,8 +57,8 @@ class OptionsPanel extends Component {
                  onChange={this._handleChangeRadius}/>
         </div>
         <div className="input">
-          <label>Upper Percentile: {this.state.upperPercent}</label>
-          <input name="upperPercentile" type="range" step="1" min="90" max="100"
+          <label>Upper Percentile: {Number(this.state.upperPercent).toFixed(1)}</label>
+          <input name="upperPercentile" type="range" step="0.5" min="95" max="100"
                  value={this.state.upperPercent}
                  onChange={this._handleChangePercent}/>
         </div>
