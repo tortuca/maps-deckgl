@@ -4,7 +4,7 @@ React app using deck.gl to map taxi availability.
 
 ## Google App Engine
 
-1. Create a Google Cloud project.
+1. Create a Google Cloud project, or use same project as created for related [taxi-ws](https://github.com/tortuca/taxi-ws).
 2. Open a Cloud Shell.
 
 Clone entire repository into the project folder.
